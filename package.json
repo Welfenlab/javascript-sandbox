@@ -1,6 +1,6 @@
 {
   "name": "@tutor/javascript-sandbox",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Lightweight Javascript Sandbox environment",
   "main": "lib/javascript_sandbox.js",
   "scripts": {
@@ -26,6 +26,7 @@
     "Maik Marschner (https://github.com/leMaik)",
     "Tim Ebbeke (https://github.com/5cript)"
   ],
+  "repository" : "git@github.com:Welfenlab/javascript-sandbox.git",
   "license": "MIT",
   "dependencies": {
     "lodash": "^3.10.1",

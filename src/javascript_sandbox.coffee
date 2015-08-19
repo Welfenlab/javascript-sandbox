@@ -10,6 +10,8 @@ Sandbox = {
   createApi: () ->
     []
   generateApiMethod: (name) ->
+    # generate random name
+    id = uuid.v4()
     process: (code) -> "var #{name}=function(){application.remote.#{name}.apply(null,arguments)}\n#{code}"
     name: name
   createRunner: (customApi = [], cbs = {}) ->
@@ -18,21 +20,36 @@ Sandbox = {
   run: (code, customApi) ->
     id = uuid.v4()
 
-    # generate api link similar to jailed
-    api = remote: customApi
+    internals = _.reduce customApi.internal, ((acc, i, fname) ->
+      "#{acc}\nvar #{fname} = #{i}"), ""
 
-    evalCode = "var fn = function(application){#{code}};fn";
+    remoteApi = _(customApi.remote).chain()
+      .keys()
+      .reject (v) -> (v=="finished" or v == "failed")
+      .value()
+    remotes = (_.map remoteApi, (api) -> "var #{api} = application.remote.#{api}").join ";"
+    internalApi = _.keys customApi.internal
+
+    apiArgs = (_.union remoteApi, internalApi).join ","
+
+    evalCode = """
+      var runTests = function(#{apiArgs}){#{code}};
+      var start = function(application){ #{remotes};#{internals};runTests(#{apiArgs})};
+      start
+    """
+
+    console.log evalCode
 
     # create "sandboxed" function
     try
       runner = eval evalCode
       # call it!
-      runner api
+      runner customApi
 
       # is synchronous so.. its finished here
-      customApi.finished?()
+      customApi.remote.finished?()
     catch e
-      customApi.failed? e
+      customApi.remote.failed? e
 
   debug: (code, customApi, cbs) ->
     debugApi = _.union [(code) -> "debugger;\n#{code}"], customApi

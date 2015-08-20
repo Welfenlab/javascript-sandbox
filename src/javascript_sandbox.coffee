@@ -6,28 +6,21 @@ gen_jail_api = (cb) ->
   log: console.log.bind console
   __finished__: cb
 
+interalDefinition = (api) ->
+  _.reduce api.internal, ((acc, i, fname) ->
+    "#{acc}\nvar #{fname} = #{i}"), ""
+
+allRemotes = (api) ->
+  (_.map (api.remote || {}), (api,key) -> "var #{key}=application.remote.#{key}").join ";"
+
 Sandbox = {
-  createApi: () ->
-    []
-  generateApiMethod: (name) ->
-    # generate random name
-    id = uuid.v4()
-    process: (code) -> "var #{name}=function(){application.remote.#{name}.apply(null,arguments)}\n#{code}"
-    name: name
-  createRunner: (customApi = [], cbs = {}) ->
-    run: _.partial Sandbox.run, _, customApi, cbs
-    debug: _.partial Sandbox.run, _, customApi, cbs
-  run: (code, customApi) ->
+  run: (code, customApi = {}) ->
     id = uuid.v4()
 
-    internals = _.reduce customApi.internal, ((acc, i, fname) ->
-      "#{acc}\nvar #{fname} = #{i}"), ""
+    internals = interalDefinition customApi
+    remotes = allRemotes customApi
 
-    remoteApi = _(customApi.remote).chain()
-      .keys()
-      .reject (v) -> (v=="finished" or v == "failed")
-      .value()
-    remotes = (_.map remoteApi, (api) -> "var #{api} = application.remote.#{api}").join ";"
+    remoteApi = customApi.links
     internalApi = _.keys customApi.internal
 
     apiArgs = (_.union remoteApi, internalApi).join ","
@@ -38,8 +31,6 @@ Sandbox = {
       start
     """
 
-    console.log evalCode
-
     # create "sandboxed" function
     try
       runner = eval evalCode
@@ -47,9 +38,9 @@ Sandbox = {
       runner customApi
 
       # is synchronous so.. its finished here
-      customApi.remote.finished?()
+      customApi.remote?.private?.finished?()
     catch e
-      customApi.remote.failed? e
+      customApi.remote?.private?.failed? e
 
   debug: (code, customApi, cbs) ->
     debugApi = _.union [(code) -> "debugger;\n#{code}"], customApi

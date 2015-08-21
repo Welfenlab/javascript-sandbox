@@ -6,8 +6,8 @@ gen_jail_api = (cb) ->
   log: console.log.bind console
   __finished__: cb
 
-interalDefinition = (api) ->
-  _.reduce api.internal, ((acc, i, fname) ->
+snippetsDefinition = (api) ->
+  _.reduce api.snippets, ((acc, i, fname) ->
     "#{acc}\nvar #{fname} = #{i}"), ""
 
 allRemotes = (api) ->
@@ -17,17 +17,17 @@ Sandbox = {
   run: (code, customApi = {}) ->
     id = uuid.v4()
 
-    internals = interalDefinition customApi
+    snippets = snippetsDefinition customApi
     remotes = allRemotes customApi
 
     remoteApi = customApi.links
-    internalApi = _.keys customApi.internal
+    snippetsApi = _.keys customApi.snippets
 
-    apiArgs = (_.union remoteApi, internalApi).join ","
+    apiArgs = (_.union remoteApi, snippetsApi).join ","
 
     evalCode = """
       var runTests = function(#{apiArgs}){#{code}};
-      var start = function(application){ #{remotes};#{internals};runTests(#{apiArgs})};
+      var start = function(application){ #{remotes};#{snippets};runTests(#{apiArgs})};
       start
     """
 
@@ -38,9 +38,9 @@ Sandbox = {
       runner customApi
 
       # is synchronous so.. its finished here
-      customApi.remote?.private?.finished?()
+      customApi.remote?.finished?()
     catch e
-      customApi.remote?.private?.failed? e
+      customApi.remote?.failed? e
 
   debug: (code, customApi, cbs) ->
     debugApi = _.union [(code) -> "debugger;\n#{code}"], customApi

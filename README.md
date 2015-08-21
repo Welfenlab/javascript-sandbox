@@ -21,7 +21,7 @@ You can pass an API object to the run function that allows the execution of exte
 
 ## Example
 
-```
+```js
 var sandbox = require('@tutor/javascript-sandbox');
 
 sandbox.run("log('test');logIt('test2')", {

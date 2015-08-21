@@ -43,8 +43,8 @@ Sandbox = {
       customApi.remote?.failed? e
 
   debug: (code, customApi, cbs) ->
-    debugApi = _.union [(code) -> "debugger;\n#{code}"], customApi
-    Sandbox.run code, debugApi, cbs
+    code = "debugger;#{code}"
+    Sandbox.run code, customApi, cbs
 
 }
 

@@ -1,3 +1,4 @@
+![](https://travis-ci.org/Welfenlab/javascript-sandbox.svg)
 # javascript-sandbox
 This package creates an unreliable sandbox for running javascript code. It is compatible to the tutor jailed-sandbox and you can exchange it  any time.
 
